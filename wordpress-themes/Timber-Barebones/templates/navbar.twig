@@ -1,0 +1,22 @@
+<div class="navbar navbar-fixed-top primary-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand logo-wrapper" href="/">
+                        <img src="/wp-content/uploads/2017/05/four-mime-logo.png"
+                             alt="Four Mime Logo">
+                    </a>
+                </div>
+                <div class="header-nav-wrapper collapse navbar-collapse pull-right" id="myNavbar">
+                     {% include "menu.twig" with {'menu': menu.get_items} %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+<div class="container-fluid team-container">
+    <div class="row">
+        <div class="col-md-5 col-md-offset-1 section-title">
+            <h2>{{ page.get_field('team_section_title') }}</h2>
+        </div>
+    </div>
+    <div class="row team-section-1">
+        <div class="col-md-5 col-md-offset-2 col-left">
+            <div class="overlay-img-container">
+                <div class="sep"></div>
+                <img class="img-responsive" src="/wp-content/uploads/2017/05/team-1-overlay.jpg">
+            </div>
+        </div>
+        <div class="col-md-5 col-right text-content">
+            <h3>{{ page.get_field('team_section_1_subtitle') }}</h3>
+            <h2>{{ page.get_field('team_section_1_title') }}</h2>
+            <div class="content">
+                {{ page.get_field('team_section_1_content') }}
+            </div>
+        </div>
+    </div>
+    <div class="row team-section-2">
+        <div class="col-md-5 col-md-offset-2 col-left text-content">
+            <h3>{{ page.get_field('team_section_2_subtitle') }}</h3>
+            <h2>{{ page.get_field('team_section_2_title') }}</h2>
+            <div class="content">
+                {{ page.get_field('team_section_2_content') }}
+            </div>
+            
+        </div>
+        <div class="col-md-5 col-right">
+            <div class="overlay-img-container">
+                <div class="sep"></div>
+                <img class="img-responsive" src="/wp-content/uploads/2017/05/team-2-overlay.jpg">
+            </div>
+        </div>
+    </div>
+    <div class="row cta-wrapper text-center">
+        <a class="btn cta" href="#">MORE ABOUT US</a>
+    </div>
+</div>

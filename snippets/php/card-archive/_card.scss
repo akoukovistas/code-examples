@@ -1,0 +1,127 @@
+
+
+.card {
+
+	transition: .3s linear all;
+
+	&:hover {
+		@include box-shadow-hover();
+	}
+
+	&__title {
+		@extend %h3;
+	}
+
+	&--background {
+		background-position: center center;
+		background-repeat: no-repeat;
+		background-size: cover;
+		color: $white;
+		margin: 0;
+		max-height: rem-calc(400);
+		height: 100vw;
+		position: relative;
+
+		@include breakpoint( medium ) {
+			height: 50vw;
+		}
+
+		&:hover, &:focus {
+			color: $white;
+		}
+
+		.card__content {
+			bottom: 0;
+			left: 0;
+			padding: $global-padding;
+			position: absolute;
+			z-index: 1;
+
+			@include breakpoint( medium ) {
+				padding: $global-padding * 1.5;
+			}
+
+			@include breakpoint( large ) {
+				padding: $global-padding * 2;
+			}
+		}
+
+		.card__title {
+			line-height: 1;
+		}
+
+		.button--underlined {
+			color: $white;
+			margin: 0;
+			padding-top: 0;
+			padding-bottom: 0;
+
+			&:after {
+				content: url('../images/icons/icon-arrow-white.png');
+			}
+		}
+	}
+
+	&--team-member {
+
+		@include xy-cell;
+
+		border-radius: 3px;
+		display: block;
+		margin-bottom: $global-margin / 2;
+		margin-top: $global-margin / 2;
+		position: relative;
+		transition: border-color .25s ease-in-out;
+
+		border: 0;
+		text-align: center;
+
+		ul {
+			list-style: none;
+		}
+
+		@include breakpoint(medium) {
+			@include xy-cell(1 of 2);
+		}
+
+		@include breakpoint(large) {
+			@include xy-cell(1 of 4);
+		}
+
+		.card__image {
+			border-radius: 100%;
+			border: 3px solid $light-gray;
+			display: inline-block;
+			margin: 0;
+			max-width: rem-calc(150); // Prevent big faces.
+			overflow: hidden;
+		}
+
+		.card__title {
+			@extend %h5;
+
+			margin-bottom: $global-margin / 3;
+		}
+
+		.card__role,
+		.card__role * {
+			font-size: rem-calc(16);
+			font-weight: $global-weight-normal;
+			margin-bottom: $global-margin / 2;
+		}
+
+		// Disable hover styles.
+		&:hover,
+		&:focus,
+		&:active {
+			border-color: rgba($secondary-color, .25);
+			color: $body-font-color;
+			text-decoration: none;
+
+			&,
+			* {
+				text-decoration: none !important;
+			}
+		}
+	} // Team member Card.
+}

@@ -1,0 +1,26 @@
+<div class="container-fluid journal-container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h2 class="section-title">THE JOURNAL</h2>
+        </div>
+    </div>
+    <div class="row latest-posts-wrapper">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="row">
+                {% for post in posts %}
+                    <div class="col-md-4">
+                        <div class="col-md-12 journal-entry" style="background-color: #{{ post.get_field('featured_color') }}">
+                            <h2 class="post-title"><a href="{{ post.get_permalink }}">{{ post.get_title }}</a></h2>
+                            <p class="post-date">{{ post.get_date }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="row cta-wrapper text-center">
+        <div class="col-md-12">
+            <a class="btn cta">SEE ALL POSTS</a>
+        </div>
+    </div>
+</div>
