@@ -16,23 +16,25 @@ use CraftyAnnie\Pdf;
  *
  * @return Pdf\PdfMaker
  */
-
 function craftyannie_create_wishlist_attachment( string $html ): Pdf\PdfMaker {
 	$pdf = craftyannie_pdf_handler();
 	$pdf->make( $html );
-	$pdf->save( get_stylesheet_directory() . '/library/pdf/my-antalis-favourites_' . time() . '.pdf' );
+	$pdf->save( get_stylesheet_directory() . '/library/pdf/safeguarding-checklist_' . time() . '.pdf' );
 	return $pdf;
 }
 
 /**
- * This will generate and attach a pdf of the resources based on the answers given by a user taking the
+ * This will generate and attach a pdf of the resources based on the answers given by a user taking the questionnaire.
  *
- * @param array $entry the GF entry data.
+ * @param array $notification the Gforms notification object
+ * @param array $form
+ * @param array $entry
+ * @return stdClass
  */
-function email_checklist_after_submission( array $entry, array $form ): void {
+function email_checklist_after_submission( array $notification, array $form, array $entry ): array {
 
-	// Entry[22] is the email field - check if there's an email there and it's an actual email, otherwise skip pdf generation.
-	if ( $entry[22] && filter_var( $entry[22], FILTER_VALIDATE_EMAIL ) ) {
+	// Entry[22] is the email field - check if there's an email,if it's an actual email and if it's the user notification - otherwise skip pdf generation.
+	if ( $entry[22] && filter_var( $entry[22], FILTER_VALIDATE_EMAIL ) && $notification['name'] == 'User Notification' ) {
 
 		$details['pdf_entry_data'] = craftyannie_compile_pdf_entry_data( $entry, $form );
 
@@ -42,9 +44,7 @@ function email_checklist_after_submission( array $entry, array $form ): void {
 		// Email details.
 		$details['title']     = 'Ann Craft Trust - Safeguarding Checklist';
 		$details['subject']   = 'Ann Craft Trust - Your Safeguarding Checklist';
-		$details['template']  = 'safeguarding_checklist';
 		$details['pdf_title'] = 'Your Safeguarding Checklist';
-
 
 		$pdf_image_path = get_stylesheet_directory() . '/assets/images/logo.png';
 
@@ -56,43 +56,21 @@ function email_checklist_after_submission( array $entry, array $form ): void {
 		// Make the wishlist file.
 		$pdf = craftyannie_create_wishlist_attachment( $html );
 
-		craftyannie_send_wishlist_email( $pdf, $details );
+		if ( file_exists( $pdf ) ) {
+			$notification['attachments']   = rgar( $notification, 'attachments', array() );
+			$notification['attachments'][] = $pdf;
+		} else {
+			GFCommon::log_debug( __METHOD__ . '(): not attaching; file does not exist.' );
+		}
+
 		die;
 	}
 
-
+	return $notification;
 }
 
-add_action( 'gform_after_submission_8', 'email_checklist_after_submission', 10, 2 );
-
-/**
- * Send the wishlist email and delete the PDF file.
- *
- * @param  Pdf\PdfMaker  $pdf
- * @param  array  $details
- *
- * @return bool
- */
-function craftyannie_send_wishlist_email( Pdf\PdfMaker $pdf, array $details ): bool {
-
-	$headers   = [];
-	$headers[] = 'From: Antalis Substr8 <noreply@antalis-substr8.co.uk>';
-
-	// Get the email content.
-	ob_start();
-	include_once get_stylesheet_directory() . '/template-parts/email/header.php';
-	include_once get_stylesheet_directory() . '/template-parts/email/' . $details['template'] . '.php';
-	include_once get_stylesheet_directory() . '/template-parts/email/footer.php';
-	$message = ob_get_clean();
-
-	// Send the mail.
-	$success = wp_mail( $details['email'], $details['subject'], $message, $headers, [ $pdf->get_path() ] );
-
-	// Delete the PDF.
-	$pdf->delete();
-
-	return $success;
-}
+// Attach the pdf generation to the form notifications.
+add_action( 'gform_notification_8', 'email_checklist_after_submission', 10, 3 );
 
 /**
  * Process the submitted questionnaire and assign values to an array to be used with pdf generation.
