@@ -24,6 +24,11 @@ class PdfMaker {
 	private $path;
 
 	/**
+	 * @var string The PDF name.
+	 */
+	private $name;
+
+	/**
 	 * PdfMaker constructor.
 	 *
 	 * @param  Dompdf  $dompdf
@@ -96,5 +101,23 @@ class PdfMaker {
 	public function stream(): void {
 		$this->dompdf->stream( 'safeguarding checklist.pdf', [ 'Attachment' => false ] );
 		exit;
+	}
+
+	/**
+	 * Set the name of the PDF.
+	 *
+	 * @param string $name
+	 */
+	public function set_name( string $name ): void {
+		$this->name = $name;
+	}
+
+	/**
+	 * Get the name of the PDF.
+	 *
+	 * @return string The PDF name.
+	 */
+	public function get_name(): string {
+		return $this->name;
 	}
 }
