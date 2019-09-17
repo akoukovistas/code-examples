@@ -3,6 +3,7 @@
 /**
  * Dev notes for future prosperity
  * Organization Checklist = GF 8
+ * Individual Checklist = GF 9
  */
 
 declare( strict_types = 1 );
@@ -14,6 +15,12 @@ define( 'EMAIL_FIELD_ID', 22 );
 define( 'LAST_HEADING_FIELD_ID', 4 );
 define( 'AC_THANK_YOU_PAGE_ID', 968 );
 
+// Set the PDF duration - currently 1 day.
+define( 'AC_PDF_DURATION', 60 * 60 * 24 );
+
+// The pdf deletion cron route.
+define( 'PDF_DELETION_ROUTE', 'nothing/tosee/here' );
+
 /**
  * Convenience function to build and write a PDF from HTML.
  *
@@ -22,10 +29,13 @@ define( 'AC_THANK_YOU_PAGE_ID', 968 );
  * @return Pdf\PdfMaker
  */
 function craftyannie_create_checklist_attachment( string $html ): Pdf\PdfMaker {
+
 	$pdf = craftyannie_pdf_handler();
 	$pdf->make( $html );
 	$pdf_path = "/library/pdf/";
 	$pdf_name = 'safeguarding-checklist_' . time() . '.pdf';
+	// Keeping this commented out as a consistent file name is good for testing.
+	// $pdf_name = 'safeguarding-checklist_test.pdf'; 
 	$pdf->set_name( $pdf_name );
 	$pdf->save( get_stylesheet_directory() . $pdf_path . $pdf_name );
 
@@ -73,6 +83,7 @@ function generate_and_attach_pdf_to_notification( array $notification, array $fo
 
 // Attach the pdf generation to the form notifications.
 add_action( 'gform_notification_8', 'generate_and_attach_pdf_to_notification', 10, 3 );
+add_action( 'gform_notification_9', 'generate_and_attach_pdf_to_notification', 10, 3 );
 
 /**
  * Process the submitted questionnaire and assign values to an array to be used with pdf generation.
@@ -149,6 +160,30 @@ function craftyannie_match_entry_data_to_acf( array $pdf_entry_data, int $form_i
 					}
 				}
 			break;
+
+			// GF9 = Individual.
+			case 9:
+				$individual_supporting_content_field_name = 'ac_safeguarding_individual_supporting_content';
+				$individual_supporting_content_field_value = get_field( $individual_supporting_content_field_name, 'option' );
+
+				foreach ( $pdf_entry_data as $pdf_entry_datum ) {
+
+					if ( $pdf_entry_datum['field_type'] === "answer" ) {
+						if ( mb_strtolower( $pdf_entry_datum['entry_object']->get_entry_answer() ) === "no" && have_rows( $individual_supporting_content_field_name, 'option' ) ) {
+
+							foreach ( $individual_supporting_content_field_value as $subfield ) {
+								if ( (int) $pdf_entry_datum["field_id"] === (int) $subfield["ac_gravity_form_field_id"] ) {
+									// Assign the support content and break out of the loop.
+									$pdf_entry_datum['entry_object']->set_entry_support_content( $subfield["ac_supporting_content"] );
+									break;
+								}
+							}
+
+						}
+					}
+				}
+			break;
+
 			// If this happens, notify the developer that the form is actually in fact an unexpected form.
 			default:
 				// There's no need to be upset.
@@ -195,12 +230,12 @@ function craftyannie_generate_pdf_based_based_on_entry_and_form( array $entry, a
 
 	$details['pdf_entry_data'] = craftyannie_compile_pdf_entry_data( $entry, $form );
 
-	$details['pdf_title'] = 'Your Safeguarding Checklist';
+	$details['pdf_title'] = 'Safeguarding Checklist';
 
 	// Load in the two WSYWIG ACF Fields.
 	$details['pdf_intro'] = get_field( "ac_email_intro_area", 'option' );
 	$details['pdf_resources'] = get_field( "ac_email_resources_area", 'option' );
-	$pdf_image_path = get_stylesheet_directory() . '/assets/images/logo.png';
+	$pdf_image_path = get_stylesheet_directory() . '/assets/images/logo-inverted.svg';
 
 	// Create the czechlist HTML.
 	ob_start();
@@ -218,4 +253,60 @@ function craftyannie_generate_pdf_based_based_on_entry_and_form( array $entry, a
 
 	set_transient( 'ac_pdf_generation_' . $entry['id'], $transient_data );
 
+}
+
+/**
+ * Add rewrites for pdf_deletion endpoint.
+ */
+function craftyannie_rewrite_pdf_cron() {
+	add_rewrite_rule( '^' . PDF_DELETION_ROUTE . '$', 'index.php?ac_pdf_deletion=1', 'top' );
+}
+
+add_action( 'init', 'craftyannie_rewrite_pdf_cron' );
+
+
+/**
+ * Register pdf deletion query var.
+ *
+ * @param array $query_vars List of query vars.
+ *
+ * @return array
+ */
+function craftyannie_rewrite_pdf_cron_query_var( $query_vars ) : array {
+	$query_vars[] = 'ac_pdf_deletion';
+
+	return $query_vars;
+}
+
+add_filter( 'query_vars', 'craftyannie_rewrite_pdf_cron_query_var' );
+
+/**
+ * Handle PDF deletion cron.
+ */
+function craftyannie_pdf_cron_activation() : void {
+	if ( get_query_var( 'ac_pdf_deletion' ) ) {
+		craftyannie_process_pdf_deletion();
+	}
+}
+
+add_action( 'wp', 'craftyannie_pdf_cron_activation' );
+
+/**
+ * When it's run, go through the existing PDFs and delete those that are older than AC_PDF_DURATION.
+ */
+function craftyannie_process_pdf_deletion() : void {
+
+	$files = glob ( get_stylesheet_directory() . "/library/pdf/*.pdf" );
+	$now   = time();
+
+	foreach ( $files as $file ) {
+		if ( is_file( $file ) ) {
+			if ( $now - filemtime( $file ) >= AC_PDF_DURATION ) {
+				echo basename( $file ) . ' deleted';
+				unlink( $file );
+			}
+		}
+	}
+
+	wp_die();
 }
